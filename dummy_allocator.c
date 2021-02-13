@@ -26,6 +26,7 @@ void *malloc(size_t size)
 
     size_t new_size = used + size + sizeof(block_t);
     if (new_size > ARENA_SIZE) {
+        LOG("out of memory (%zd > %zd)\n", new_size, ARENA_SIZE);
         return NULL;
     }
 
@@ -55,6 +56,10 @@ void *realloc(void *ptr, size_t size)
     if (size == 0) {
         /* free is a no-op */
         return NULL;
+    }
+
+    if (!ptr) {
+        return malloc(size);
     }
 
     block_t *block = (block_t*)ptr - 1;

@@ -2,17 +2,24 @@
 #include <string.h>
 
 #ifdef DUMMY_ALLOCATOR_LOG
-#    include <stdio.h>
-#    define LOG(...) do { fprintf(stderr, __VA_ARGS__); } while (0)
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#define LOG(...) do { \
+int len = snprintf(NULL, 0, __VA_ARGS__); \
+char buf[len + 1]; \
+sprintf(buf, __VA_ARGS__); \
+syscall(SYS_write, 2, buf, len + 1); \
+} while (0)
 #else
-#    define LOG(...)
+#define LOG(...)
 #endif
 
 #define ARENA_SIZE (1 << 24)
 
 typedef struct {
     size_t size;
-    char data[0];
+    char data[];
 } block_t;
 
 static char arena[ARENA_SIZE];

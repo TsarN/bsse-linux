@@ -48,7 +48,13 @@ void runBenchmarkIostream(Settings settings) {
     }
 
     runBenchmark(settings, [&](auto& buf) {
-        return (bool)file.read(buf.data(), settings.blockSize);
+        if (!file) {
+            return false;
+        }
+
+        file.read(buf.data(), settings.blockSize);
+
+        return true;
     });
 }
 

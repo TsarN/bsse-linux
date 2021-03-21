@@ -4,5 +4,3 @@ build
 compile_commands.json
 .cache
 .vim
-*.o
-*.so

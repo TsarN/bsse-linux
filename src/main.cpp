@@ -57,6 +57,7 @@ Fragmentation get_file_fragmentation(const char* path) {
     int fd = open(path, O_RDONLY | O_NOFOLLOW | O_LARGEFILE);
     if (fd == -1) {
         if (errno == ELOOP) {
+            std::cerr << "Warn: " << path << " is a symlink, skipping" << std::endl;
             return {
                 .avg_run = 0.0,
                 .n_blocks = 0
@@ -66,13 +67,20 @@ Fragmentation get_file_fragmentation(const char* path) {
         throw_errno("open");
     }
 
+    int block_size;
+    if (ioctl(fd, FIGETBSZ, &block_size) == -1) {
+        close(fd);
+        throw_errno("ioctl(FIGETBSZ)");
+    }
+
+    auto n_blocks = (st.st_size + block_size - 1) / block_size;
+
     Counter counter;
-    auto n_blocks = (st.st_size + st.st_blksize - 1) / st.st_blksize;
     for (auto i = 0; i < n_blocks; ++i) {
         int block = i;
         if (ioctl(fd, FIBMAP, &block) == -1) {
             close(fd);
-            throw_errno("ioctl");
+            throw_errno("ioctl(FIBMAP)");
         }
         counter.next(block);
     }
